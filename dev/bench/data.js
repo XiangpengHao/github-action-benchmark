@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1579550067800,
+  "lastUpdate": 1579561328755,
   "entries": {
     "Rust Benchmark": [
       {
@@ -22737,6 +22737,44 @@ window.BENCHMARK_DATA = {
             "name": "Fibonacci 20",
             "value": 21.826,
             "range": "+/- 5.22",
+            "unit": "us",
+            "extra": "100 samples\n2 iterations"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jase.williams@gmail.com",
+            "name": "Jason Williams",
+            "username": "jasonwilliams"
+          },
+          "committer": {
+            "email": "jase.williams@gmail.com",
+            "name": "Jason Williams",
+            "username": "jasonwilliams"
+          },
+          "distinct": true,
+          "id": "5bf9916cf249667c027ee55c80be72bf5e603ba6",
+          "message": "readme updates",
+          "timestamp": "2020-01-20T23:00:54Z",
+          "tree_id": "70865b53819e1cc3d82c516e7d2eec2ab3a74e71",
+          "url": "https://github.com/jasonwilliams/github-action-benchmark/commit/5bf9916cf249667c027ee55c80be72bf5e603ba6"
+        },
+        "date": 1579561327561,
+        "tool": "catch2",
+        "benches": [
+          {
+            "name": "Fibonacci 10",
+            "value": 136,
+            "range": "+/- 20",
+            "unit": "ns",
+            "extra": "100 samples\n192 iterations"
+          },
+          {
+            "name": "Fibonacci 20",
+            "value": 16.893,
+            "range": "+/- 2.27",
             "unit": "us",
             "extra": "100 samples\n2 iterations"
           }
