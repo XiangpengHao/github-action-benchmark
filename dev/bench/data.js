@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1579522727027,
+  "lastUpdate": 1579550067800,
   "entries": {
     "Rust Benchmark": [
       {
@@ -22703,8 +22703,46 @@ window.BENCHMARK_DATA = {
             "extra": "100 samples\n2 iterations"
           }
         ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jase.williams@gmail.com",
+            "name": "Jason Williams",
+            "username": "jasonwilliams"
+          },
+          "committer": {
+            "email": "jase.williams@gmail.com",
+            "name": "Jason Williams",
+            "username": "jasonwilliams"
+          },
+          "distinct": true,
+          "id": "6a65bcf7e7ee2bb7094560da98f7dda501279c53",
+          "message": "tweaks",
+          "timestamp": "2020-01-20T19:52:23Z",
+          "tree_id": "b7eb0082698c2eafb02447f683e7ec21bc996e72",
+          "url": "https://github.com/jasonwilliams/github-action-benchmark/commit/6a65bcf7e7ee2bb7094560da98f7dda501279c53"
+        },
+        "date": 1579550066312,
+        "tool": "catch2",
+        "benches": [
+          {
+            "name": "Fibonacci 10",
+            "value": 182,
+            "range": "+/- 25",
+            "unit": "ns",
+            "extra": "100 samples\n183 iterations"
+          },
+          {
+            "name": "Fibonacci 20",
+            "value": 21.826,
+            "range": "+/- 5.22",
+            "unit": "us",
+            "extra": "100 samples\n2 iterations"
+          }
+        ]
       }
     ]
   },
-  "repoUrl": "https://github.com/rhysd/github-action-benchmark"
+  "repoUrl": "https://github.com/jasonwilliams/github-action-benchmark"
 }
