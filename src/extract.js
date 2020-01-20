@@ -76,6 +76,33 @@ function extractCargoResult(output) {
     }
     return ret;
 }
+function extractCriterionResult(output) {
+    const lines = output.split('\n');
+    const ret = [];
+    // Example:
+    // fibonacci   time:   [5.4756 ms 5.5354 ms 5.6049 ms]
+    // Symbol Creation         time:   [567.19 us 572.98 us 580.80 us]
+    // https://regex101.com/r/34Xrmb/1
+    // Only the middle value unit is collected, as its assumed the high/low values will have the same unit
+    const reExtract = /^(?<name>.*)time:\s*\[(?<low>\d+\.?\d*)\s(?:\w{1,2})\s(?<value>\d+\.?\d*)\s(?<unit>\w{1,2})\s(?<high>\d+\.?\d*).*$/;
+    for (const line of lines) {
+        const m = line.match(reExtract);
+        if (m === null || !m.groups) {
+            continue;
+        }
+        const name = m.groups.name.trim();
+        const value = parseFloat(m.groups.value);
+        const range = `+/- ${(parseFloat(m.groups.high) - parseFloat(m.groups.low)).toFixed(3)}`;
+        const unit = m.groups.unit;
+        ret.push({
+            name,
+            value,
+            range,
+            unit,
+        });
+    }
+    return ret;
+}
 function extractGoResult(output) {
     const lines = output.split('\n');
     const ret = [];
@@ -162,6 +189,99 @@ function extractGoogleCppResult(output) {
         return { name, value, unit, extra };
     });
 }
+function extractCatch2Result(output) {
+    // Example:
+    // benchmark name samples       iterations    estimated <-- Start benchmark section
+    //                mean          low mean      high mean <-- Ignored
+    //                std dev       low std dev   high std dev <-- Ignored
+    // ----------------------------------------------------- <-- Ignored
+    // Fibonacci 20   100           2             8.4318 ms <-- Start actual benchmark
+    //                43.186 us     41.402 us     46.246 us <-- Actual benchmark data
+    //                11.719 us      7.847 us     17.747 us <-- Ignored
+    const reTestCaseStart = /^benchmark name +samples +iterations +estimated/;
+    const reBenchmarkStart = /^([a-zA-Z\d ]+) +(\d+) +(\d+) +(?:\d+(\.\d+)?) (?:ns|ms|us|s)/;
+    const reBenchmarkValues = /^ +(\d+(?:\.\d+)?) (ns|us|ms|s) +(?:\d+(?:\.\d+)?) (?:ns|us|ms|s) +(?:\d+(?:\.\d+)?) (?:ns|us|ms|s)/;
+    const reEmptyLine = /^\s*$/;
+    const reSeparator = /^-+$/;
+    const lines = output.split('\n');
+    lines.reverse();
+    let lnum = 0;
+    function nextLine() {
+        var _a;
+        return [(_a = lines.pop(), (_a !== null && _a !== void 0 ? _a : null)), ++lnum];
+    }
+    function extractBench() {
+        const startLine = nextLine()[0];
+        if (startLine === null) {
+            return null;
+        }
+        const start = startLine.match(reBenchmarkStart);
+        if (start === null) {
+            return null; // No more benchmark found. Go to next benchmark suite
+        }
+        const name = start[1].trim();
+        const extra = `${start[2]} samples\n${start[3]} iterations`;
+        const [meanLine, meanLineNum] = nextLine();
+        if (meanLine === null) {
+            throw new Error(`Unexpected EOF: Mean values are missing for benchmark '${name}' at line ${meanLineNum}`);
+        }
+        const mean = meanLine.match(reBenchmarkValues);
+        if (mean === null) {
+            throw new Error(`Mean values cannot be retrieved for benchmark '${name}' on parsing input '${meanLine}' at line ${meanLineNum}`);
+        }
+        const value = parseFloat(mean[1]);
+        const unit = mean[2];
+        const [stdDevLine, stdDevLineNum] = nextLine();
+        if (stdDevLine === null) {
+            throw new Error(`Unexpected EOF: Std-dev values are missing for benchmark '${name}' at line ${stdDevLineNum}`);
+        }
+        const stdDev = stdDevLine.match(reBenchmarkValues);
+        if (stdDev === null) {
+            throw new Error(`Std-dev values cannot be retrieved for benchmark '${name}' on parsing '${stdDevLine}' at line ${stdDevLineNum}`);
+        }
+        const range = '+/- ' + stdDev[1].trim();
+        // Skip empty line
+        const [emptyLine, emptyLineNum] = nextLine();
+        if (emptyLine === null || !reEmptyLine.test(emptyLine)) {
+            throw new Error(`Empty line is not following after 'std dev' line of benchmark '${name}' at line ${emptyLineNum}`);
+        }
+        return { name, value, range, unit, extra };
+    }
+    const ret = [];
+    while (lines.length > 0) {
+        // Search header of benchmark section
+        const line = nextLine()[0];
+        if (line === null) {
+            break; // All lines were eaten
+        }
+        if (!reTestCaseStart.test(line)) {
+            continue;
+        }
+        // Eat until a separator line appears
+        for (;;) {
+            const [line, num] = nextLine();
+            if (line === null) {
+                throw new Error(`Separator '------' does not appear after benchmark suite at line ${num}`);
+            }
+            if (reSeparator.test(line)) {
+                break;
+            }
+        }
+        let benchFound = false;
+        for (;;) {
+            const res = extractBench();
+            if (res === null) {
+                break;
+            }
+            ret.push(res);
+            benchFound = true;
+        }
+        if (!benchFound) {
+            throw new Error(`No benchmark found for bench suite. Possibly mangled output from Catch2:\n\n${output}`);
+        }
+    }
+    return ret;
+}
 async function extractResult(config) {
     const output = await fs_1.promises.readFile(config.outputFilePath, 'utf8');
     const { tool } = config;
@@ -169,6 +289,9 @@ async function extractResult(config) {
     switch (tool) {
         case 'cargo':
             benches = extractCargoResult(output);
+            break;
+        case 'criterion':
+            benches = extractCriterionResult(output);
             break;
         case 'go':
             benches = extractGoResult(output);
@@ -181,6 +304,9 @@ async function extractResult(config) {
             break;
         case 'googlecpp':
             benches = extractGoogleCppResult(output);
+            break;
+        case 'catch2':
+            benches = extractCatch2Result(output);
             break;
         default:
             throw new Error(`FATAL: Unexpected tool: '${tool}'`);
