@@ -105,7 +105,6 @@ export const DEFAULT_INDEX_HTML = String.raw`<!DOCTYPE html>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.2/dist/Chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mathjs@6.5.0/dist/math.min.js"></script>
     <script src="data.js"></script>
     <script id="main-script">
       'use strict';
