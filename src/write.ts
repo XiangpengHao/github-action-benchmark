@@ -372,7 +372,9 @@ async function writeBenchmarkToGitHubPagesWithRetry(
 async function writeBenchmarkToGitHubPages(bench: Benchmark, config: Config): Promise<Benchmark | null> {
     const { ghPagesBranch, skipFetchGhPages } = config;
     if (!skipFetchGhPages) {
-        await git.cmd('fetch', 'origin', `${ghPagesBranch}:${ghPagesBranch}`);
+        const token = config.githubToken;
+        const remote = token !== undefined ? git.getRemoteUrl(token) : 'origin';
+        await git.cmd('fetch', remote, `${ghPagesBranch}:${ghPagesBranch}`);
     }
     await git.cmd('switch', ghPagesBranch);
     try {

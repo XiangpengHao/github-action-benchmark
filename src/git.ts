@@ -52,7 +52,7 @@ export async function cmd(...args: string[]): Promise<string> {
     return res.stdout;
 }
 
-function getRemoteUrl(token: string): string {
+export function getRemoteUrl(token: string): string {
     /* eslint-disable @typescript-eslint/camelcase */
     const fullName = github.context.payload.repository?.full_name;
     /* eslint-enable @typescript-eslint/camelcase */
