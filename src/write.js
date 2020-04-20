@@ -68,6 +68,7 @@ function biggerIsBetter(tool) {
         case 'catch2':
             return false;
     }
+    return false;
 }
 function findAlerts(curSuite, prevSuite, threshold) {
     core.debug(`Comparing current:${curSuite.commit.id} and prev:${prevSuite.commit.id} for alert`);

@@ -76,6 +76,33 @@ function extractCargoResult(output) {
     }
     return ret;
 }
+function extractCriterionResult(output) {
+    const lines = output.split('\n');
+    const ret = [];
+    // Example:
+    // fibonacci   time:   [5.4756 ms 5.5354 ms 5.6049 ms]
+    // Symbol Creation         time:   [567.19 us 572.98 us 580.80 us]
+    // https://regex101.com/r/34Xrmb/1
+    // Only the middle value unit is collected, as its assumed the high/low values will have the same unit
+    const reExtract = /^(?<name>.*)time:\s*\[(?<low>\d+\.?\d*)\s(?:\w{1,2})\s(?<value>\d+\.?\d*)\s(?<unit>\w{1,2})\s(?<high>\d+\.?\d*).*$/;
+    for (const line of lines) {
+        const m = line.match(reExtract);
+        if (m === null || !m.groups) {
+            continue;
+        }
+        const name = m.groups.name.trim();
+        const value = parseFloat(m.groups.value);
+        const range = `+/- ${(parseFloat(m.groups.high) - parseFloat(m.groups.low)).toFixed(3)}`;
+        const unit = m.groups.unit;
+        ret.push({
+            name,
+            value,
+            range,
+            unit,
+        });
+    }
+    return ret;
+}
 function extractGoResult(output) {
     const lines = output.split('\n');
     const ret = [];
@@ -262,6 +289,9 @@ async function extractResult(config) {
     switch (tool) {
         case 'cargo':
             benches = extractCargoResult(output);
+            break;
+        case 'criterion':
+            benches = extractCriterionResult(output);
             break;
         case 'go':
             benches = extractGoResult(output);
