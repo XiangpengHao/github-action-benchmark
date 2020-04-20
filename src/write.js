@@ -68,7 +68,6 @@ function biggerIsBetter(tool) {
         case 'catch2':
             return false;
     }
-    return false;
 }
 function findAlerts(curSuite, prevSuite, threshold) {
     core.debug(`Comparing current:${curSuite.commit.id} and prev:${prevSuite.commit.id} for alert`);
@@ -282,10 +281,22 @@ async function writeBenchmarkToGitHubPagesWithRetry(bench, config, retry) {
     }
     return prevBench;
 }
+function getRemoteUrl(token) {
+    var _a;
+    /* eslint-disable @typescript-eslint/camelcase */
+    const fullName = (_a = github.context.payload.repository) === null || _a === void 0 ? void 0 : _a.full_name;
+    /* eslint-enable @typescript-eslint/camelcase */
+    if (!fullName) {
+        throw new Error(`Repository info is not available in payload: ${JSON.stringify(github.context.payload)}`);
+    }
+    return `https://x-access-token:${token}@github.com/${fullName}.git`;
+}
 async function writeBenchmarkToGitHubPages(bench, config) {
     const { ghPagesBranch, skipFetchGhPages } = config;
     if (!skipFetchGhPages) {
-        await git.cmd('fetch', 'origin', `${ghPagesBranch}:${ghPagesBranch}`);
+        const token = config.githubToken;
+        const remote = token !== undefined ? getRemoteUrl(token) : 'origin';
+        await git.cmd('fetch', remote, `${ghPagesBranch}:${ghPagesBranch}`);
     }
     await git.cmd('switch', ghPagesBranch);
     try {
